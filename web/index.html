@@ -1,0 +1,996 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lab 07: Embedding & Vector Store — Nhóm Mãi Là Lốp Trưởng</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-base: #0a0e17;
+      --bg-surface: #111827;
+      --bg-surface-elevated: #1a2234;
+      --bg-card: rgba(26, 34, 52, 0.65);
+      --border-subtle: rgba(255, 255, 255, 0.08);
+      --border-glow: rgba(59, 130, 246, 0.4);
+      --text-primary: #f8fafc;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      --primary: #3b82f6;
+      --primary-gradient: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+      --accent-cyan: #06b6d4;
+      --accent-emerald: #10b981;
+      --accent-amber: #f59e0b;
+      --accent-rose: #f43f5e;
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --shadow-glow: 0 0 25px rgba(59, 130, 246, 0.15);
+      --shadow-card: 0 10px 30px -5px rgba(0, 0, 0, 0.5);
+      --font-main: 'Plus Jakarta Sans', sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-base);
+      color: var(--text-primary);
+      font-family: var(--font-main);
+      line-height: 1.6;
+      min-height: 100vh;
+      background-image: 
+        radial-gradient(circle at 15% 15%, rgba(59, 130, 246, 0.08) 0%, transparent 40%),
+        radial-gradient(circle at 85% 85%, rgba(139, 92, 246, 0.08) 0%, transparent 40%);
+      background-attachment: fixed;
+    }
+
+    header {
+      border-bottom: 1px solid var(--border-subtle);
+      background: rgba(10, 14, 23, 0.8);
+      backdrop-filter: blur(12px);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      padding: 1rem 2rem;
+    }
+
+    .header-container {
+      max-width: 1400px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .logo-badge {
+      width: 44px;
+      height: 44px;
+      background: var(--primary-gradient);
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      box-shadow: 0 0 15px rgba(59, 130, 246, 0.5);
+    }
+
+    .brand-text h1 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .brand-text p {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+    }
+
+    .nav-tabs {
+      display: flex;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 4px;
+      gap: 4px;
+    }
+
+    .nav-tab {
+      padding: 8px 16px;
+      border: none;
+      background: transparent;
+      color: var(--text-secondary);
+      font-family: var(--font-main);
+      font-size: 0.875rem;
+      font-weight: 600;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .nav-tab:hover {
+      color: var(--text-primary);
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    .nav-tab.active {
+      background: var(--primary-gradient);
+      color: #ffffff;
+      box-shadow: 0 2px 10px rgba(59, 130, 246, 0.3);
+    }
+
+    main {
+      max-width: 1400px;
+      margin: 2rem auto;
+      padding: 0 2rem;
+    }
+
+    .tab-content {
+      display: none;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Grid Layouts */
+    .grid-2col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+    }
+
+    @media (max-width: 1024px) {
+      .grid-2col { grid-template-columns: 1fr; }
+    }
+
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 1.5rem;
+      backdrop-filter: blur(10px);
+      box-shadow: var(--shadow-card);
+      position: relative;
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.25rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .card-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Form Controls */
+    .form-group {
+      margin-bottom: 1.25rem;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-bottom: 0.5rem;
+    }
+
+    .input-text, .select-control, textarea {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      color: var(--text-primary);
+      font-family: var(--font-main);
+      font-size: 0.9rem;
+      transition: all 0.2s;
+    }
+
+    .input-text:focus, .select-control:focus, textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 0.75rem 1.5rem;
+      border-radius: var(--radius-md);
+      font-weight: 600;
+      font-size: 0.9rem;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s;
+    }
+
+    .btn-primary {
+      background: var(--primary-gradient);
+      color: #ffffff;
+      box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+    }
+
+    .btn-secondary {
+      background: var(--bg-surface-elevated);
+      color: var(--text-primary);
+      border: 1px solid var(--border-subtle);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    /* Preset Queries Pills */
+    .pills-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .query-pill {
+      padding: 6px 12px;
+      background: rgba(59, 130, 246, 0.1);
+      border: 1px solid rgba(59, 130, 246, 0.2);
+      border-radius: 20px;
+      font-size: 0.8rem;
+      color: #93c5fd;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .query-pill:hover {
+      background: rgba(59, 130, 246, 0.2);
+      border-color: var(--primary);
+      transform: translateY(-1px);
+    }
+
+    .query-pill.badge-filter {
+      background: rgba(244, 63, 94, 0.1);
+      border-color: rgba(244, 63, 94, 0.3);
+      color: #fda4af;
+    }
+
+    /* Strategy Selector Chips */
+    .strategy-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 0.75rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .strategy-card {
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 0.875rem;
+      background: var(--bg-surface);
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+    }
+
+    .strategy-card:hover {
+      border-color: rgba(255, 255, 255, 0.2);
+      background: var(--bg-surface-elevated);
+    }
+
+    .strategy-card.selected {
+      border-color: var(--primary);
+      background: rgba(59, 130, 246, 0.08);
+      box-shadow: 0 0 15px rgba(59, 130, 246, 0.15);
+    }
+
+    .strategy-card h4 {
+      font-size: 0.9rem;
+      margin-bottom: 2px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .strategy-card .author {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    /* Agent Response Box */
+    .agent-response-box {
+      background: linear-gradient(180deg, rgba(30, 41, 59, 0.7) 0%, rgba(15, 23, 42, 0.8) 100%);
+      border: 1px solid rgba(59, 130, 246, 0.25);
+      border-radius: var(--radius-lg);
+      padding: 1.25rem;
+      margin-bottom: 1.5rem;
+      position: relative;
+    }
+
+    .agent-response-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 700;
+      color: var(--accent-cyan);
+      margin-bottom: 0.75rem;
+      font-size: 0.95rem;
+    }
+
+    .agent-response-body {
+      font-size: 0.95rem;
+      line-height: 1.7;
+      color: #f1f5f9;
+      white-space: pre-wrap;
+    }
+
+    /* Chunk Results List */
+    .chunk-item {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 1rem;
+      margin-bottom: 1rem;
+      transition: all 0.2s;
+    }
+
+    .chunk-item:hover {
+      border-color: rgba(255, 255, 255, 0.15);
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    }
+
+    .chunk-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.5rem;
+    }
+
+    .chunk-rank {
+      font-family: var(--font-mono);
+      font-weight: 700;
+      font-size: 0.85rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .score-badge {
+      font-family: var(--font-mono);
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--accent-emerald);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .chunk-content {
+      font-size: 0.85rem;
+      color: #cbd5e1;
+      line-height: 1.6;
+      background: rgba(0, 0, 0, 0.25);
+      padding: 0.75rem;
+      border-radius: var(--radius-sm);
+      font-family: var(--font-mono);
+      max-height: 160px;
+      overflow-y: auto;
+    }
+
+    /* Badges */
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .badge-student { background: rgba(59, 130, 246, 0.2); color: #93c5fd; }
+    .badge-faculty { background: rgba(245, 158, 11, 0.2); color: #fcd34d; }
+    .badge-all { background: rgba(16, 185, 129, 0.2); color: #6ee7b7; }
+
+    /* A/B Testing Matrix */
+    .ab-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+    }
+
+    .ab-table th, .ab-table td {
+      padding: 12px 16px;
+      border: 1px solid var(--border-subtle);
+      text-align: left;
+      font-size: 0.875rem;
+    }
+
+    .ab-table th {
+      background: var(--bg-surface-elevated);
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .ab-highlight-danger {
+      background: rgba(244, 63, 94, 0.15) !important;
+      color: #fecdd3;
+      border-left: 3px solid var(--accent-rose) !important;
+    }
+
+    .ab-highlight-success {
+      background: rgba(16, 185, 129, 0.15) !important;
+      color: #a7f3d0;
+      border-left: 3px solid var(--accent-emerald) !important;
+    }
+
+    /* Spinner */
+    .spinner {
+      display: inline-block;
+      width: 18px;
+      height: 18px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      border-top-color: #fff;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.15); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.3); }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header>
+    <div class="header-container">
+      <div class="brand">
+        <div class="logo-badge">🏛️</div>
+        <div class="brand-text">
+          <h1>HUIT & HUST Library RAG Assistant</h1>
+          <p>Lab 07: Embedding & Vector Store — Nhóm: <strong>Mãi Là Lốp Trưởng</strong></p>
+        </div>
+      </div>
+
+      <nav class="nav-tabs">
+        <button class="nav-tab active" onclick="switchTab('rag-tab', this)">
+          💬 Hỏi Đáp Tác Tử (RAG)
+        </button>
+        <button class="nav-tab" onclick="switchTab('ab-tab', this)">
+          ⚖️ Thử Nghiệm A/B Filter
+        </button>
+        <button class="nav-tab" onclick="switchTab('chunk-tab', this)">
+          🧩 So Sánh 4 Chiến Lược
+        </button>
+        <button class="nav-tab" onclick="switchTab('corpus-tab', this)">
+          📚 Kho Tài Liệu (10 Docs)
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- MAIN CONTAINER -->
+  <main>
+
+    <!-- TAB 1: RAG CHAT & RETRIEVAL -->
+    <div id="rag-tab" class="tab-content active">
+      <div class="grid-2col">
+
+        <!-- CỘT TRÁI: BỘ ĐIỀU KHIỂN -->
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">🔍 Truy Vấn & Thiết Lập</h2>
+            <span class="badge badge-student" id="corpus-status">10 Tài Liệu Sẵn Sàng</span>
+          </div>
+
+          <!-- Gợi ý câu hỏi Benchmark -->
+          <label class="form-label">Câu hỏi mẫu từ Bộ Đánh Giá (Benchmark Queries):</label>
+          <div class="pills-container" id="benchmark-pills">
+            <!-- Render via JS -->
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="query-input">Nội dung câu hỏi:</label>
+            <textarea id="query-input" rows="3" placeholder="Nhập câu hỏi tra cứu quy định mượn trả sách, thủ tục bồi thường..."></textarea>
+          </div>
+
+          <!-- Chọn chiến lược Chunking -->
+          <label class="form-label">Chọn chiến lược Chunking kiểm thử:</label>
+          <div class="strategy-grid" id="strategy-selector">
+            <div class="strategy-card selected" data-strat="recursive" onclick="selectStrategy('recursive')">
+              <h4>Recursive ⚡ <span style="font-size:0.75rem; color:#60a5fa;">7/10</span></h4>
+              <div class="author">Phạm Quang Huy</div>
+              <p style="font-size:0.75rem; color:var(--text-secondary); margin-top:4px;">Cắt đệ quy đa cấp (\n\n, \n, .), size 300</p>
+            </div>
+            <div class="strategy-card" data-strat="fixed" onclick="selectStrategy('fixed')">
+              <h4>Fixed-Size 📐 <span style="font-size:0.75rem; color:#34d399;">9/10</span></h4>
+              <div class="author">Tạ Hoàng Vinh</div>
+              <p style="font-size:0.75rem; color:var(--text-secondary); margin-top:4px;">Cửa sổ 700 ký tự, overlap 50 ký tự</p>
+            </div>
+            <div class="strategy-card" data-strat="sentence" onclick="selectStrategy('sentence')">
+              <h4>Sentence ✍️ <span style="font-size:0.75rem; color:#34d399;">9/10</span></h4>
+              <div class="author">Ngô Đức Chung</div>
+              <p style="font-size:0.75rem; color:var(--text-secondary); margin-top:4px;">Tách câu nguyên vẹn, gom cụm 3 câu</p>
+            </div>
+            <div class="strategy-card" data-strat="heading" onclick="selectStrategy('heading')">
+              <h4>Heading 🏷️ <span style="font-size:0.75rem; color:#fbbf24;">8/10</span></h4>
+              <div class="author">Bùi Tiến Cường</div>
+              <p style="font-size:0.75rem; color:var(--text-secondary); margin-top:4px;">Tách theo mục #, ##; inject ngữ cảnh cha</p>
+            </div>
+          </div>
+
+          <!-- Bộ lọc Metadata -->
+          <div class="grid-2col" style="gap:1rem; margin-bottom:1.25rem;">
+            <div>
+              <label class="form-label" for="audience-select">Bộ lọc Đối tượng (Metadata Filter):</label>
+              <select id="audience-select" class="select-control">
+                <option value="all">Tất cả bạn đọc (Không lọc)</option>
+                <option value="student" selected>Chỉ Sinh viên / Học viên (student)</option>
+                <option value="faculty">Chỉ Giảng viên / Viên chức (faculty)</option>
+              </select>
+            </div>
+            <div>
+              <label class="form-label" for="topk-select">Số lượng Chunk truy xuất (Top-K):</label>
+              <select id="topk-select" class="select-control">
+                <option value="3" selected>Top 3 Chunks (Chuẩn Lab)</option>
+                <option value="5">Top 5 Chunks</option>
+              </select>
+            </div>
+          </div>
+
+          <button id="btn-submit-query" class="btn btn-primary" style="width:100%;" onclick="submitQuery()">
+            <span>🚀 Tìm Kiếm & Hỏi Agent</span>
+          </button>
+        </div>
+
+        <!-- CỘT PHẢI: KẾT QUẢ TÁC TỬ & CHUNKS -->
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">🤖 Kết Quả Tác Tử & Ngữ Cảnh (RAG Context)</h2>
+            <span id="response-meta" style="font-size:0.8rem; color:var(--text-secondary);">Sẵn sàng</span>
+          </div>
+
+          <!-- Khung câu trả lời Agent -->
+          <div class="agent-response-box">
+            <div class="agent-response-header">
+              <span>✨ Câu trả lời của KnowledgeBaseAgent</span>
+            </div>
+            <div id="agent-answer-text" class="agent-response-body">
+              Chọn một câu hỏi mẫu hoặc gõ câu hỏi để xem tác tử tổng hợp câu trả lời dựa trên kho tri thức thư viện kèm trích dẫn nguồn [1], [2].
+            </div>
+          </div>
+
+          <!-- Danh sách Chunk truy xuất được -->
+          <h3 style="font-size:0.95rem; margin-bottom:0.75rem; color:var(--text-secondary);">
+            📄 Danh Sách Chunks Đạt Điểm Tương Đồng Cao Nhất:
+          </h3>
+          <div id="retrieved-chunks-list">
+            <p style="font-size:0.85rem; color:var(--text-muted); font-style:italic;">Chưa có dữ liệu truy xuất.</p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- TAB 2: A/B TESTING FILTER LAB -->
+    <div id="ab-tab" class="tab-content">
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <h2 class="card-title">⚖️ Thử Nghiệm A/B Bắt Buộc: Chứng Minh Vai Trò Metadata Filter</h2>
+            <p style="font-size:0.85rem; color:var(--text-secondary); margin-top:4px;">
+              Câu hỏi Q1: <em>"Thời hạn mượn sách đối với sinh viên trong trường là bao nhiêu ngày và được gia hạn mấy lần?"</em>
+            </p>
+          </div>
+          <button class="btn btn-primary" onclick="runAbTestDemo()">
+            <span>🔄 Chạy Lại Thử Nghiệm A/B</span>
+          </button>
+        </div>
+
+        <div style="background:rgba(59, 130, 246, 0.08); border-left:4px solid var(--primary); padding:1rem; border-radius:var(--radius-sm); margin-bottom:1.5rem;">
+          <h4 style="color:#93c5fd; font-size:0.9rem; margin-bottom:4px;">🎯 Mục tiêu thực nghiệm:</h4>
+          <p style="font-size:0.85rem; color:#e2e8f0;">
+            Hai tài liệu <code>huit-borrow-student</code> (Sinh viên: 10 ngày, 3 cuốn) và <code>huit-borrow-faculty</code> (Giảng viên: 180 ngày, 3 cuốn) có từ khóa trùng nhau tới 90%. 
+            Khi <strong>KHÔNG CÓ FILTER</strong>, tài liệu của Giảng viên có mật độ từ khóa cao hơn sẽ chiếm mất slot Top-1/Top-3, khiến Agent trả lời nhầm lẫn tai hại!
+          </p>
+        </div>
+
+        <div id="ab-results-container">
+          <p style="font-size:0.9rem; color:var(--text-muted); text-align:center; padding:2rem;">
+            Đang tải dữ liệu thực nghiệm A/B...
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 3: STRATEGY COMPARISON -->
+    <div id="chunk-tab" class="tab-content">
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">🧩 Thanh Tra & So Sánh 4 Thuật Toán Phân Đoạn (Chunking Inspector)</h2>
+        </div>
+
+        <div class="grid-2col" style="margin-bottom:1.5rem;">
+          <div>
+            <label class="form-label" for="chunk-doc-select">Chọn tài liệu để phân tích:</label>
+            <select id="chunk-doc-select" class="select-control" onchange="runChunkCompare()">
+              <!-- Filled via JS -->
+            </select>
+          </div>
+          <div style="display:flex; align-items:flex-end;">
+            <button class="btn btn-primary" style="width:100%;" onclick="runChunkCompare()">
+              <span>⚙️ So Sánh 4 Chiến Lược Cắt</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Metric summary cards -->
+        <div class="strategy-grid" id="chunk-metrics-grid">
+          <!-- Filled via JS -->
+        </div>
+
+        <div id="chunk-preview-container" style="margin-top:1.5rem;">
+          <!-- Samples -->
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 4: DATA INVENTORY -->
+    <div id="corpus-tab" class="tab-content">
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">📚 Kho Dữ Liệu Thư Viện Đại Học (10 Tài Liệu Chuẩn)</h2>
+          <span class="badge badge-all">Data Governance Verified</span>
+        </div>
+
+        <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap:1rem;" id="document-grid">
+          <!-- Rendered via JS -->
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <script>
+    let selectedStrategy = 'recursive';
+    let systemInfo = null;
+
+    function switchTab(tabId, el) {
+      document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.nav-tab').forEach(b => b.classList.remove('active'));
+      document.getElementById(tabId).classList.add('active');
+      el.classList.add('active');
+
+      if (tabId === 'ab-tab') runAbTestDemo();
+      if (tabId === 'chunk-tab') runChunkCompare();
+    }
+
+    function selectStrategy(strat) {
+      selectedStrategy = strat;
+      document.querySelectorAll('.strategy-card').forEach(c => {
+        c.classList.toggle('selected', c.dataset.strat === strat);
+      });
+    }
+
+    async function loadSystemInfo() {
+      try {
+        const res = await fetch('/api/info');
+        systemInfo = await res.json();
+        
+        // Render benchmark query pills
+        const pillsContainer = document.getElementById('benchmark-pills');
+        pillsContainer.innerHTML = '';
+        systemInfo.benchmark_queries.forEach((q, idx) => {
+          const pill = document.createElement('div');
+          pill.className = `query-pill ${q.filter ? 'badge-filter' : ''}`;
+          pill.innerHTML = `<span>${q.id}: ${q.query.substring(0, 38)}...</span> ${q.filter ? '🏷️' : ''}`;
+          pill.onclick = () => {
+            document.getElementById('query-input').value = q.query;
+            if (q.filter && q.filter.audience) {
+              document.getElementById('audience-select').value = q.filter.audience;
+            } else {
+              document.getElementById('audience-select').value = 'all';
+            }
+            submitQuery();
+          };
+          pillsContainer.appendChild(pill);
+        });
+
+        // Load documents dropdown
+        loadDocuments();
+      } catch (err) {
+        console.error('Lỗi nạp system info:', err);
+      }
+    }
+
+    async function submitQuery() {
+      const query = document.getElementById('query-input').value.trim();
+      if (!query) {
+        alert('Vui lòng nhập câu hỏi hoặc chọn câu hỏi mẫu!');
+        return;
+      }
+
+      const audience = document.getElementById('audience-select').value;
+      const topK = parseInt(document.getElementById('topk-select').value, 10);
+      const btn = document.getElementById('btn-submit-query');
+      btn.innerHTML = '<span class="spinner"></span> Đang truy xuất & suy luận...';
+      btn.disabled = true;
+
+      try {
+        const res = await fetch('/api/query', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            query: query,
+            strategy: selectedStrategy,
+            audience_filter: audience === 'all' ? null : audience,
+            top_k: topK
+          })
+        });
+        const data = await res.json();
+
+        // Render Agent answer
+        document.getElementById('agent-answer-text').innerText = data.answer;
+        document.getElementById('response-meta').innerText = 
+          `Chiến lược: ${data.strategy_name} | Lọc: ${data.audience_filter || 'Không'}`;
+
+        // Render retrieved chunks
+        const chunksList = document.getElementById('retrieved-chunks-list');
+        chunksList.innerHTML = '';
+        if (!data.results || data.results.length === 0) {
+          chunksList.innerHTML = '<p style="color:var(--accent-rose);">Không tìm thấy chunk nào phù hợp!</p>';
+          return;
+        }
+
+        data.results.forEach((r, idx) => {
+          const item = document.createElement('div');
+          item.className = 'chunk-item';
+          const scorePercent = Math.max(0, Math.min(100, Math.round(r.score * 100)));
+          const aud = r.metadata ? r.metadata.audience : 'unknown';
+          item.innerHTML = `
+            <div class="chunk-header">
+              <span class="chunk-rank">🎯 Top ${idx + 1}: <strong>${r.id}</strong> <span class="badge badge-${aud}">${aud}</span></span>
+              <span class="score-badge">Cosine: ${r.score.toFixed(3)} (${scorePercent}%)</span>
+            </div>
+            <div class="chunk-content">${escapeHtml(r.content)}</div>
+          `;
+          chunksList.appendChild(item);
+        });
+
+      } catch (err) {
+        alert('Lỗi truy vấn: ' + err.message);
+      } finally {
+        btn.innerHTML = '<span>🚀 Tìm Kiếm & Hỏi Agent</span>';
+        btn.disabled = false;
+      }
+    }
+
+    async function runAbTestDemo() {
+      const container = document.getElementById('ab-results-container');
+      container.innerHTML = '<div style="text-align:center; padding:2rem;"><span class="spinner"></span> Đang chạy A/B test đối chứng...</div>';
+
+      try {
+        const res = await fetch('/api/ab_test');
+        const data = await res.json();
+
+        let html = `
+          <table class="ab-table">
+            <thead>
+              <tr>
+                <th style="width:22%;">Chiến Lược Chunking</th>
+                <th style="width:39%;">KHI CÓ FILTER {'audience': 'student'}</th>
+                <th style="width:39%;">KHI KHÔNG CÓ FILTER (No Filter)</th>
+              </tr>
+            </thead>
+            <tbody>
+        `;
+
+        for (const [key, strat] of Object.entries(data.strategies)) {
+          // Render with filter top 3
+          let withHtml = '';
+          strat.with_filter.forEach((r, i) => {
+            const isTarget = data.expected_docs.includes(r.metadata.doc_id);
+            const badgeClass = isTarget ? 'ab-highlight-success' : '';
+            withHtml += `<div style="padding:4px 8px; margin-bottom:4px; border-radius:4px;" class="${badgeClass}">
+              <strong>Top ${i+1}:</strong> ${r.id} (score=${r.score.toFixed(3)}) - <span class="badge badge-${r.metadata.audience}">${r.metadata.audience}</span>
+              ${isTarget ? ' ✅ [ĐÚNG]' : ''}
+            </div>`;
+          });
+
+          // Render without filter top 3
+          let withoutHtml = '';
+          strat.without_filter.forEach((r, i) => {
+            const isTarget = data.expected_docs.includes(r.metadata.doc_id);
+            const isFaculty = r.metadata.audience === 'faculty';
+            const badgeClass = isFaculty ? 'ab-highlight-danger' : (isTarget ? 'ab-highlight-success' : '');
+            withoutHtml += `<div style="padding:4px 8px; margin-bottom:4px; border-radius:4px;" class="${badgeClass}">
+              <strong>Top ${i+1}:</strong> ${r.id} (score=${r.score.toFixed(3)}) - <span class="badge badge-${r.metadata.audience}">${r.metadata.audience}</span>
+              ${isFaculty ? ' ⚠️ [GIẢNG VIÊN CHIẾM]' : (isTarget ? ' ✅ [ĐÚNG]' : '')}
+            </div>`;
+          });
+
+          html += `
+            <tr>
+              <td>
+                <strong style="color:#60a5fa;">${strat.name}</strong><br>
+                <small style="color:var(--text-muted);">${strat.author}</small>
+              </td>
+              <td>${withHtml}</td>
+              <td>${withoutHtml}</td>
+            </tr>
+          `;
+        }
+
+        html += `
+            </tbody>
+          </table>
+          <div style="margin-top:1.5rem; background:rgba(16, 185, 129, 0.1); border:1px solid rgba(16, 185, 129, 0.3); border-radius:var(--radius-md); padding:1rem;">
+            <h4 style="color:var(--accent-emerald); font-size:0.95rem; margin-bottom:4px;">💡 Kết luận cốt lõi:</h4>
+            <p style="font-size:0.875rem; color:#cbd5e1;">
+              Nhìn vào cột <strong>KHI KHÔNG CÓ FILTER</strong>: ở chiến lược <em>Heading-Based</em>, tài liệu Giảng viên lọt thẳng lên <strong>Top 1 tuyệt đối</strong> (score=0.589); ở <em>Sentence-Based</em> và <em>Fixed-Size</em>, tài liệu Giảng viên nhảy vào Top-3 và đá văng tài liệu Sinh viên ra ngoài. 
+              Nhờ có <strong>Pre-filtering</strong>, toàn bộ tài liệu giảng viên bị chặn ngay từ đầu, bảo vệ tính đúng đắn cho câu trả lời của Sinh viên!
+            </p>
+          </div>
+        `;
+
+        container.innerHTML = html;
+      } catch (err) {
+        container.innerHTML = `<p style="color:var(--accent-rose);">Lỗi thực nghiệm A/B: ${err.message}</p>`;
+      }
+    }
+
+    async function loadDocuments() {
+      try {
+        const res = await fetch('/api/documents');
+        const docs = await res.json();
+
+        // 1. Fill dropdown for chunk comparator
+        const docSelect = document.getElementById('chunk-doc-select');
+        docSelect.innerHTML = '';
+        docs.forEach(d => {
+          const opt = document.createElement('option');
+          opt.value = d.doc_id;
+          opt.innerText = `${d.doc_id} — ${d.title} (${d.chars} ký tự)`;
+          docSelect.appendChild(opt);
+        });
+
+        // 2. Fill grid in tab 4
+        const docGrid = document.getElementById('document-grid');
+        docGrid.innerHTML = '';
+        docs.forEach(d => {
+          const card = document.createElement('div');
+          card.className = 'card';
+          card.style.background = 'var(--bg-surface)';
+          card.innerHTML = `
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:0.5rem;">
+              <span class="badge badge-${d.audience}">${d.audience}</span>
+              <span style="font-size:0.75rem; color:var(--text-muted);">${d.chars} ký tự</span>
+            </div>
+            <h4 style="font-size:0.95rem; margin-bottom:4px; color:#f8fafc;">${d.title}</h4>
+            <p style="font-family:var(--font-mono); font-size:0.75rem; color:#60a5fa; margin-bottom:8px;">ID: ${d.doc_id}</p>
+            <p style="font-size:0.8rem; color:var(--text-secondary); margin-bottom:8px;">Chuyên mục: <code>${d.category}</code></p>
+            <a href="${d.source_url}" target="_blank" style="font-size:0.75rem; color:#93c5fd; text-decoration:none;">🔗 Xem nguồn chính thức</a>
+          `;
+          docGrid.appendChild(card);
+        });
+      } catch (err) {
+        console.error('Lỗi nạp documents:', err);
+      }
+    }
+
+    async function runChunkCompare() {
+      const docId = document.getElementById('chunk-doc-select').value;
+      const metricsGrid = document.getElementById('chunk-metrics-grid');
+      const previewContainer = document.getElementById('chunk-preview-container');
+
+      metricsGrid.innerHTML = '<p>Đang cắt và đo lường...</p>';
+      previewContainer.innerHTML = '';
+
+      try {
+        const res = await fetch('/api/chunk_compare', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ doc_id: docId })
+        });
+        const data = await res.json();
+
+        metricsGrid.innerHTML = '';
+        for (const [key, strat] of Object.entries(data.results)) {
+          const card = document.createElement('div');
+          card.className = 'strategy-card';
+          card.style.cursor = 'default';
+          card.innerHTML = `
+            <h4>${strat.name}</h4>
+            <div class="author">${strat.author}</div>
+            <div style="margin-top:8px; font-size:1.1rem; font-weight:700; color:var(--accent-cyan);">
+              ${strat.count} <span style="font-size:0.8rem; font-weight:400; color:var(--text-secondary);">chunks</span>
+            </div>
+            <div style="font-size:0.8rem; color:var(--text-muted);">
+              Độ dài TB: <strong>${strat.avg_length}</strong> ký tự
+            </div>
+          `;
+          metricsGrid.appendChild(card);
+        }
+
+        // Preview sample chunks
+        let previewHtml = `<h3 style="font-size:1rem; margin-bottom:1rem; color:var(--text-primary);">Mẫu các chunk đầu tiên từ chiến lược Recursive (Phạm Quang Huy):</h3>`;
+        const recChunks = data.results.recursive.chunks;
+        recChunks.slice(0, 4).forEach((c, idx) => {
+          previewHtml += `
+            <div class="chunk-item" style="margin-bottom:0.75rem;">
+              <div class="chunk-header">
+                <span class="chunk-rank"># Chunk ${idx + 1} (${c.length} ký tự)</span>
+              </div>
+              <div class="chunk-content">${escapeHtml(c)}</div>
+            </div>
+          `;
+        });
+        previewContainer.innerHTML = previewHtml;
+
+      } catch (err) {
+        metricsGrid.innerHTML = `<p style="color:var(--accent-rose);">Lỗi so sánh: ${err.message}</p>`;
+      }
+    }
+
+    function escapeHtml(text) {
+      return text
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    // Init on page load
+    window.addEventListener('DOMContentLoaded', () => {
+      loadSystemInfo();
+    });
+  </script>
+</body>
+</html>
