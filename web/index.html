@@ -1,12 +1,15 @@
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Lab 07: Embedding & Vector Store — Nhóm Mãi Là Lốp Trưởng</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet">
   <style>
     :root {
       --bg-base: #0a0e17;
@@ -45,7 +48,7 @@
       font-family: var(--font-main);
       line-height: 1.6;
       min-height: 100vh;
-      background-image: 
+      background-image:
         radial-gradient(circle at 15% 15%, rgba(59, 130, 246, 0.08) 0%, transparent 40%),
         radial-gradient(circle at 85% 85%, rgba(139, 92, 246, 0.08) 0%, transparent 40%);
       background-attachment: fixed;
@@ -155,8 +158,15 @@
     }
 
     @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(6px); }
-      to { opacity: 1; transform: translateY(0); }
+      from {
+        opacity: 0;
+        transform: translateY(6px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
 
     /* Grid Layouts */
@@ -167,7 +177,9 @@
     }
 
     @media (max-width: 1024px) {
-      .grid-2col { grid-template-columns: 1fr; }
+      .grid-2col {
+        grid-template-columns: 1fr;
+      }
     }
 
     .card {
@@ -210,7 +222,9 @@
       margin-bottom: 0.5rem;
     }
 
-    .input-text, .select-control, textarea {
+    .input-text,
+    .select-control,
+    textarea {
       width: 100%;
       padding: 0.75rem 1rem;
       background: var(--bg-surface);
@@ -222,7 +236,9 @@
       transition: all 0.2s;
     }
 
-    .input-text:focus, .select-control:focus, textarea:focus {
+    .input-text:focus,
+    .select-control:focus,
+    textarea:focus {
       outline: none;
       border-color: var(--primary);
       box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
@@ -430,9 +446,21 @@
       text-transform: uppercase;
       letter-spacing: 0.05em;
     }
-    .badge-student { background: rgba(59, 130, 246, 0.2); color: #93c5fd; }
-    .badge-faculty { background: rgba(245, 158, 11, 0.2); color: #fcd34d; }
-    .badge-all { background: rgba(16, 185, 129, 0.2); color: #6ee7b7; }
+
+    .badge-student {
+      background: rgba(59, 130, 246, 0.2);
+      color: #93c5fd;
+    }
+
+    .badge-faculty {
+      background: rgba(245, 158, 11, 0.2);
+      color: #fcd34d;
+    }
+
+    .badge-all {
+      background: rgba(16, 185, 129, 0.2);
+      color: #6ee7b7;
+    }
 
     /* A/B Testing Matrix */
     .ab-table {
@@ -441,7 +469,8 @@
       margin-top: 1rem;
     }
 
-    .ab-table th, .ab-table td {
+    .ab-table th,
+    .ab-table td {
       padding: 12px 16px;
       border: 1px solid var(--border-subtle);
       text-align: left;
@@ -476,15 +505,34 @@
       border-top-color: #fff;
       animation: spin 0.8s linear infinite;
     }
-    @keyframes spin { to { transform: rotate(360deg); } }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
 
     /* Scrollbar */
-    ::-webkit-scrollbar { width: 6px; height: 6px; }
-    ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.15); border-radius: 3px; }
-    ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.3); }
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 3px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(255, 255, 255, 0.3);
+    }
   </style>
 </head>
+
 <body>
 
   <!-- HEADER -->
@@ -493,7 +541,7 @@
       <div class="brand">
         <div class="logo-badge">🏛️</div>
         <div class="brand-text">
-          <h1>HUIT & HUST Library RAG Assistant</h1>
+          <h1>Library RAG Assistant</h1>
           <p>Lab 07: Embedding & Vector Store — Nhóm: <strong>Mãi Là Lốp Trưởng</strong></p>
         </div>
       </div>
@@ -537,7 +585,8 @@
 
           <div class="form-group">
             <label class="form-label" for="query-input">Nội dung câu hỏi:</label>
-            <textarea id="query-input" rows="3" placeholder="Nhập câu hỏi tra cứu quy định mượn trả sách, thủ tục bồi thường..."></textarea>
+            <textarea id="query-input" rows="3"
+              placeholder="Nhập câu hỏi tra cứu quy định mượn trả sách, thủ tục bồi thường..."></textarea>
           </div>
 
           <!-- Chọn chiến lược Chunking -->
@@ -546,22 +595,26 @@
             <div class="strategy-card selected" data-strat="recursive" onclick="selectStrategy('recursive')">
               <h4>Recursive ⚡ <span style="font-size:0.75rem; color:#60a5fa;">7/10</span></h4>
               <div class="author">Phạm Quang Huy</div>
-              <p style="font-size:0.75rem; color:var(--text-secondary); margin-top:4px;">Cắt đệ quy đa cấp (\n\n, \n, .), size 300</p>
+              <p style="font-size:0.75rem; color:var(--text-secondary); margin-top:4px;">Cắt đệ quy đa cấp (\n\n, \n,
+                .), size 300</p>
             </div>
             <div class="strategy-card" data-strat="fixed" onclick="selectStrategy('fixed')">
               <h4>Fixed-Size 📐 <span style="font-size:0.75rem; color:#34d399;">9/10</span></h4>
               <div class="author">Tạ Hoàng Vinh</div>
-              <p style="font-size:0.75rem; color:var(--text-secondary); margin-top:4px;">Cửa sổ 700 ký tự, overlap 50 ký tự</p>
+              <p style="font-size:0.75rem; color:var(--text-secondary); margin-top:4px;">Cửa sổ 700 ký tự, overlap 50 ký
+                tự</p>
             </div>
             <div class="strategy-card" data-strat="sentence" onclick="selectStrategy('sentence')">
               <h4>Sentence ✍️ <span style="font-size:0.75rem; color:#34d399;">9/10</span></h4>
               <div class="author">Ngô Đức Chung</div>
-              <p style="font-size:0.75rem; color:var(--text-secondary); margin-top:4px;">Tách câu nguyên vẹn, gom cụm 3 câu</p>
+              <p style="font-size:0.75rem; color:var(--text-secondary); margin-top:4px;">Tách câu nguyên vẹn, gom cụm 3
+                câu</p>
             </div>
             <div class="strategy-card" data-strat="heading" onclick="selectStrategy('heading')">
               <h4>Heading 🏷️ <span style="font-size:0.75rem; color:#fbbf24;">8/10</span></h4>
               <div class="author">Bùi Tiến Cường</div>
-              <p style="font-size:0.75rem; color:var(--text-secondary); margin-top:4px;">Tách theo mục #, ##; inject ngữ cảnh cha</p>
+              <p style="font-size:0.75rem; color:var(--text-secondary); margin-top:4px;">Tách theo mục #, ##; inject ngữ
+                cảnh cha</p>
             </div>
           </div>
 
@@ -602,7 +655,8 @@
               <span>✨ Câu trả lời của KnowledgeBaseAgent</span>
             </div>
             <div id="agent-answer-text" class="agent-response-body">
-              Chọn một câu hỏi mẫu hoặc gõ câu hỏi để xem tác tử tổng hợp câu trả lời dựa trên kho tri thức thư viện kèm trích dẫn nguồn [1], [2].
+              Chọn một câu hỏi mẫu hoặc gõ câu hỏi để xem tác tử tổng hợp câu trả lời dựa trên kho tri thức thư viện kèm
+              trích dẫn nguồn [1], [2].
             </div>
           </div>
 
@@ -625,7 +679,8 @@
           <div>
             <h2 class="card-title">⚖️ Thử Nghiệm A/B Bắt Buộc: Chứng Minh Vai Trò Metadata Filter</h2>
             <p style="font-size:0.85rem; color:var(--text-secondary); margin-top:4px;">
-              Câu hỏi Q1: <em>"Thời hạn mượn sách đối với sinh viên trong trường là bao nhiêu ngày và được gia hạn mấy lần?"</em>
+              Câu hỏi Q1: <em>"Thời hạn mượn sách đối với sinh viên trong trường là bao nhiêu ngày và được gia hạn mấy
+                lần?"</em>
             </p>
           </div>
           <button class="btn btn-primary" onclick="runAbTestDemo()">
@@ -633,11 +688,14 @@
           </button>
         </div>
 
-        <div style="background:rgba(59, 130, 246, 0.08); border-left:4px solid var(--primary); padding:1rem; border-radius:var(--radius-sm); margin-bottom:1.5rem;">
+        <div
+          style="background:rgba(59, 130, 246, 0.08); border-left:4px solid var(--primary); padding:1rem; border-radius:var(--radius-sm); margin-bottom:1.5rem;">
           <h4 style="color:#93c5fd; font-size:0.9rem; margin-bottom:4px;">🎯 Mục tiêu thực nghiệm:</h4>
           <p style="font-size:0.85rem; color:#e2e8f0;">
-            Hai tài liệu <code>huit-borrow-student</code> (Sinh viên: 10 ngày, 3 cuốn) và <code>huit-borrow-faculty</code> (Giảng viên: 180 ngày, 3 cuốn) có từ khóa trùng nhau tới 90%. 
-            Khi <strong>KHÔNG CÓ FILTER</strong>, tài liệu của Giảng viên có mật độ từ khóa cao hơn sẽ chiếm mất slot Top-1/Top-3, khiến Agent trả lời nhầm lẫn tai hại!
+            Hai tài liệu <code>huit-borrow-student</code> (Sinh viên: 10 ngày, 3 cuốn) và
+            <code>huit-borrow-faculty</code> (Giảng viên: 180 ngày, 3 cuốn) có từ khóa trùng nhau tới 90%.
+            Khi <strong>KHÔNG CÓ FILTER</strong>, tài liệu của Giảng viên có mật độ từ khóa cao hơn sẽ chiếm mất slot
+            Top-1/Top-3, khiến Agent trả lời nhầm lẫn tai hại!
           </p>
         </div>
 
@@ -689,7 +747,8 @@
           <span class="badge badge-all">Data Governance Verified</span>
         </div>
 
-        <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap:1rem;" id="document-grid">
+        <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap:1rem;"
+          id="document-grid">
           <!-- Rendered via JS -->
         </div>
       </div>
@@ -722,7 +781,7 @@
       try {
         const res = await fetch('/api/info');
         systemInfo = await res.json();
-        
+
         // Render benchmark query pills
         const pillsContainer = document.getElementById('benchmark-pills');
         pillsContainer.innerHTML = '';
@@ -777,7 +836,7 @@
 
         // Render Agent answer
         document.getElementById('agent-answer-text').innerText = data.answer;
-        document.getElementById('response-meta').innerText = 
+        document.getElementById('response-meta').innerText =
           `Chiến lược: ${data.strategy_name} | Lọc: ${data.audience_filter || 'Không'}`;
 
         // Render retrieved chunks
@@ -838,7 +897,7 @@
             const isTarget = data.expected_docs.includes(r.metadata.doc_id);
             const badgeClass = isTarget ? 'ab-highlight-success' : '';
             withHtml += `<div style="padding:4px 8px; margin-bottom:4px; border-radius:4px;" class="${badgeClass}">
-              <strong>Top ${i+1}:</strong> ${r.id} (score=${r.score.toFixed(3)}) - <span class="badge badge-${r.metadata.audience}">${r.metadata.audience}</span>
+              <strong>Top ${i + 1}:</strong> ${r.id} (score=${r.score.toFixed(3)}) - <span class="badge badge-${r.metadata.audience}">${r.metadata.audience}</span>
               ${isTarget ? ' ✅ [ĐÚNG]' : ''}
             </div>`;
           });
@@ -850,7 +909,7 @@
             const isFaculty = r.metadata.audience === 'faculty';
             const badgeClass = isFaculty ? 'ab-highlight-danger' : (isTarget ? 'ab-highlight-success' : '');
             withoutHtml += `<div style="padding:4px 8px; margin-bottom:4px; border-radius:4px;" class="${badgeClass}">
-              <strong>Top ${i+1}:</strong> ${r.id} (score=${r.score.toFixed(3)}) - <span class="badge badge-${r.metadata.audience}">${r.metadata.audience}</span>
+              <strong>Top ${i + 1}:</strong> ${r.id} (score=${r.score.toFixed(3)}) - <span class="badge badge-${r.metadata.audience}">${r.metadata.audience}</span>
               ${isFaculty ? ' ⚠️ [GIẢNG VIÊN CHIẾM]' : (isTarget ? ' ✅ [ĐÚNG]' : '')}
             </div>`;
           });
@@ -993,4 +1052,5 @@
     });
   </script>
 </body>
+
 </html>
